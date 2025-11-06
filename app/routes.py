@@ -1,11 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, url_for
-from app import db
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for
 from app.models import Task
 from app.forms import TaskForm
+from app import db
 
-bp = Blueprint('main', __name__)
+main = Blueprint('main', __name__)
 
-@bp.route('/', methods=['GET', 'POST'])
+@main.route('/', methods=['GET', 'POST'])
 def index():
     form = TaskForm()
     if form.validate_on_submit():
@@ -14,19 +14,37 @@ def index():
         db.session.commit()
         return redirect(url_for('main.index'))
     
-    tasks = Task.query.all()
+    tasks = Task.query.order_by(Task.created_at.desc()).all()
     return render_template('index.html', form=form, tasks=tasks)
 
-@bp.route('/toggle/<int:id>')
-def toggle_task(id):
-    task = Task.query.get_or_404(id)
+@main.route('/task/<int:task_id>/toggle', methods=['POST'])
+def toggle_task(task_id):
+    task = Task.query.get_or_404(task_id)
     task.completed = not task.completed
     db.session.commit()
-    return redirect(url_for('main.index'))
+    return jsonify({'success': True, 'completed': task.completed})
 
-@bp.route('/delete/<int:id>')
-def delete_task(id):
-    task = Task.query.get_or_404(id)
+@main.route('/task/<int:task_id>/delete', methods=['POST'])
+def delete_task(task_id):
+    task = Task.query.get_or_404(task_id)
     db.session.delete(task)
     db.session.commit()
-    return redirect(url_for('main.index'))
+    return jsonify({'success': True})
+
+@main.route('/task/<int:task_id>/edit', methods=['POST'])
+def edit_task(task_id):
+    task = Task.query.get_or_404(task_id)
+    new_title = request.json.get('title', '').strip()
+    
+    if new_title:
+        task.title = new_title
+        db.session.commit()
+        return jsonify({'success': True})
+    
+    return jsonify({'success': False, 'error': 'Title cannot be empty'})
+
+@main.route('/tasks/clear-completed', methods=['POST'])
+def clear_completed():
+    Task.query.filter_by(completed=True).delete()
+    db.session.commit()
+    return jsonify({'success': True})
