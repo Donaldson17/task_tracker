@@ -1,31 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Task Tracker</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Task Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .task-form { margin-bottom: 20px; }
+        .task-item { padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 4px; }
+        .completed { text-decoration: line-through; color: #888; }
+        input[type="text"] { padding: 8px; width: 300px; }
+        button { padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; }
+    </style>
 </head>
 <body>
-  <div class="container">
     <h1>Task Tracker</h1>
     
-    <form method="POST">
-      {{ form.hidden_tag() }}
-      {{ form.title(placeholder="Enter new task...", type="text") }}
-      {{ form.submit() }}
-    </form>
-    
-    <ul>
-      {% for task in tasks %}
-        <li class="{% if task.completed %}completed{% endif %}">
-          {{ task.title }}
-          <span>
-            <a href="{{ url_for('main.toggle_task', id=task.id) }}">{% if task.completed %}↶{% else %}✔{% endif %}</a>
-            <a href="{{ url_for('main.delete_task', id=task.id) }}">🗑</a>
-          </span>
-        </li>
-      {% endfor %}
-    </ul>
-  </div>
+    <div class="task-form">
+        {{ form.hidden_tag() }}
+        {{ form.title(placeholder="Enter new task...", type="text", class="task-input") }}
+        {{ form.submit(class="submit-btn") }}
+    </div>
+
+    <div class="tasks-list">
+        {% for task in tasks %}
+        <div class="task-item {% if task.completed %}completed{% endif %}">
+            {{ task.title }}
+            {% if task.completed %}
+                <span class="status">✓ Completed</span>
+            {% else %}
+                <span class="status">~ Pending</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
 </body>
 </html>
